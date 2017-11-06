@@ -28,9 +28,12 @@ import com.amazonaws.services.kinesis.AmazonKinesis;
 import com.amazonaws.services.kinesis.model.DescribeStreamResult;
 import com.amazonaws.services.kinesis.model.PutRecordRequest;
 import com.amazonaws.services.kinesis.model.ResourceNotFoundException;
+import com.amazonaws.services.kinesis.producer.KinesisProducer;
+import com.amazonaws.services.kinesis.producer.KinesisProducerConfiguration;
 import com.amazonaws.services.kinesis.samples.stocktrades.model.StockTrade;
 import com.amazonaws.services.kinesis.samples.stocktrades.utils.ConfigurationUtils;
 import com.amazonaws.services.kinesis.samples.stocktrades.utils.CredentialUtils;
+
 
 /**
  * Continuously sends simulated stock trades to Kinesis
@@ -79,7 +82,7 @@ public class StockTradesWriter {
      * @param kinesisClient Amazon Kinesis client
      * @param streamName Name of stream
      */
-    private static void sendStockTrade(StockTrade trade, AmazonKinesis kinesisClient,
+    private static void sendStockTrade(StockTrade trade, KinesisProducer kinesisProducer,
             String streamName) {
         byte[] bytes = trade.toJsonAsBytes();
         // The bytes could be null if there is an issue with the JSON serialization by the Jackson JSON library.
@@ -96,7 +99,15 @@ public class StockTradesWriter {
         putRecord.setData(ByteBuffer.wrap(bytes));
 
         try {
-            kinesisClient.putRecord(putRecord);
+            // kinesisClient.putRecord(putRecord);
+        	
+        	/** To use KPL instead, use:
+        	* kinesis.addUserRecord("myStream", "myPartitionKey", data);
+        	* set myStream to the arg in putRecord.setStreamName as in above
+        	* same goes for myPartitionKey and data.
+        	*/
+        	
+        	kinesisProducer.addUserRecord(streamName,trade.getTickerSymbol(),ByteBuffer.wrap(bytes));
         } catch (AmazonClientException ex) {
             LOG.warn("Error sending record to Amazon Kinesis.", ex);
         }
@@ -115,6 +126,15 @@ public class StockTradesWriter {
 
         AmazonKinesisClientBuilder clientBuilder = AmazonKinesisClientBuilder.standard();
         
+      //KinesisProducer kinesisProducer = new KinesisProducer();
+        KinesisProducerConfiguration config = new KinesisProducerConfiguration()
+                .setRecordMaxBufferedTime(3000)
+                .setMaxConnections(1)
+                .setRequestTimeout(60000)
+                .setRegion("us-west-2");
+                
+        final KinesisProducer kinesisProducer = new KinesisProducer(config);
+        
         clientBuilder.setRegion(regionName);
         clientBuilder.setCredentials(CredentialUtils.getCredentialsProvider());
         clientBuilder.setClientConfiguration(ConfigurationUtils.getClientConfigWithUserAgent());
@@ -128,7 +148,7 @@ public class StockTradesWriter {
         StockTradeGenerator stockTradeGenerator = new StockTradeGenerator();
         while(true) {
             StockTrade trade = stockTradeGenerator.getRandomTrade();
-            sendStockTrade(trade, kinesisClient, streamName);
+            sendStockTrade(trade, kinesisProducer, streamName);
             Thread.sleep(100);
         }
     }
