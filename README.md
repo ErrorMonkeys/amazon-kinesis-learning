@@ -7,4 +7,6 @@ Each learning module in the series has its own branch (for example, learning-mod
 [learning-kinesis]: http://docs.aws.amazon.com/kinesis/latest/dev/learning-kinesis.html
 [kinesis-developer-guide]: http://docs.aws.amazon.com/kinesis/latest/dev/introduction.html
 
-# This fork includes the relevant pom file compatible with Version 1.0
+# About this fork
+This fork includes the relevant pom file compatible with Version 1.0.
+This also includes a new branch named "using-kinesis-producer-library" which demonstrates using the Amazon Kinesis Producer Library (KPL) instead of the Amazon Kinesis Client Library in StockTradesWriter.java. The Maven POM file is also updated to include the KPL and its own dependencies.
