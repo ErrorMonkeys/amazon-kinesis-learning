@@ -6,3 +6,5 @@ Each learning module in the series has its own branch (for example, learning-mod
 
 [learning-kinesis]: http://docs.aws.amazon.com/kinesis/latest/dev/learning-kinesis.html
 [kinesis-developer-guide]: http://docs.aws.amazon.com/kinesis/latest/dev/introduction.html
+
+# This fork includes the relevant pom file compatible with version 1.0
